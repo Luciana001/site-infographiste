@@ -1,4 +1,4 @@
 <?php
 
 declare(strict_types=1);
-require 'wordpress/index.php';
+require 'wordpress/wp-content/themes/bosa/index.php';
