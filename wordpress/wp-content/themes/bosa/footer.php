@@ -65,20 +65,6 @@ if ($footer_image || get_theme_mod('top_footer_background_color', '')) {
 				get_template_part('template-parts/footer/footer', 'three');
 			}
 		} ?>
-	
-	</div>
-	<div class="row">
-		<?php
-		$the_query = new WP_Query('category_name=citation');
-		while ($the_query->have_posts()) :
-			$the_query->the_post();
-		?>
-			<div class="col-8 ">
-				<p><?php the_content(); ?></p>
-			</div>
-
-		<?php endwhile; ?>
-		<p> lalalalal </p>
 	</div>
 </footer><!-- #colophon -->
 </div><!-- #page -->

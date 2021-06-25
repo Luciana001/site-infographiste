@@ -66,7 +66,7 @@ class Advanced_Import_Reset_WordPress {
 			$hide_notice = sanitize_text_field( $_GET['advanced-import-hide-notice'] );
 
 			if ( ! empty( $hide_notice ) && 'reset_notice' == $hide_notice ) {
-				update_option( 'advanced_import_reset_notice', 1 );
+                advanced_import_update_option( 'advanced_import_reset_notice', 1 );
 			}
 		}
 	}

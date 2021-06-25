@@ -8,7 +8,7 @@ function advanced_import_allowed_html( $input ) {
 function advanced_import_current_url() {
 	global $pagenow;
 	$current_url = $pagenow == 'tools.php' ? admin_url( 'tools.php?page=advanced-import-tool' ) : admin_url( 'themes.php?page=advanced-import' );
-	return $current_url;
+	return apply_filters('advanced_import_current_url', $current_url, $pagenow );
 }
 
 function advanced_import_get_current_theme_author() {
@@ -26,4 +26,10 @@ function advanced_import_get_theme_screenshot() {
 function advanced_import_get_theme_name() {
 	$current_theme = wp_get_theme();
 	return $current_theme->get( 'Name' );
+}
+
+function advanced_import_update_option( $option, $value = '' ) {
+	$option = apply_filters( 'advanced_import_update_option_' . $option, $option, $value );
+	$value  = apply_filters( 'advanced_import_update_value_' . $option, $value, $option );
+	update_option( $option, $value );
 }

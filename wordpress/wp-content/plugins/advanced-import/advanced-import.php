@@ -1,8 +1,8 @@
 <?php
 // If this file is called directly, abort.
 if ( ! defined( 'WPINC' ) ) {
-    echo 'Hi there!  I\'m just a plugin, not much I can do when called directly.';
-    exit;
+	echo 'Hi there!  I\'m just a plugin, not much I can do when called directly.';
+	exit;
 }
 /**
  *
@@ -14,7 +14,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Plugin Name:       Advanced Import
  * Plugin URI:        https://addonspress.com/item/advanced-import
  * Description:       Easily import demo data starter site packages or Migrate your site data
- * Version:           1.3.2
+ * Version:           1.3.3
  * Author:            AddonsPress
  * Author URI:        https://addonspress.com/
  * License:           GPL-2.0+
@@ -24,7 +24,7 @@ if ( ! defined( 'WPINC' ) ) {
  */
 
 /*Define Constants for this plugin*/
-define( 'ADVANCED_IMPORT_VERSION', '1.3.2' );
+define( 'ADVANCED_IMPORT_VERSION', '1.3.3' );
 define( 'ADVANCED_IMPORT_PLUGIN_NAME', 'advanced-import' );
 define( 'ADVANCED_IMPORT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ADVANCED_IMPORT_URL', plugin_dir_url( __FILE__ ) );
@@ -44,8 +44,8 @@ define( 'ADVANCED_IMPORT_TEMP_UPLOADS', $advanced_import_temp_uploads );
  * This action is documented in includes/class-advanced-import-activator.php
  */
 function activate_advanced_import() {
-    require_once ADVANCED_IMPORT_PATH . 'includes/class-advanced-import-activator.php';
-    Advanced_Import_Activator::activate();
+	require_once ADVANCED_IMPORT_PATH . 'includes/class-advanced-import-activator.php';
+	Advanced_Import_Activator::activate();
 }
 
 /**
@@ -53,8 +53,8 @@ function activate_advanced_import() {
  * This action is documented in includes/class-advanced-import-deactivator.php
  */
 function deactivate_advanced_import() {
-    require_once ADVANCED_IMPORT_PATH . 'includes/class-advanced-import-deactivator.php';
-    Advanced_Import_Deactivator::deactivate();
+	require_once ADVANCED_IMPORT_PATH . 'includes/class-advanced-import-deactivator.php';
+	Advanced_Import_Deactivator::deactivate();
 }
 
 register_activation_hook( __FILE__, 'activate_advanced_import' );
@@ -76,6 +76,6 @@ require ADVANCED_IMPORT_PATH . 'includes/class-advanced-import.php';
  * @since    1.0.0
  */
 function advanced_import() {
-    return Advanced_Import::instance();
+	return Advanced_Import::instance();
 }
 advanced_import();

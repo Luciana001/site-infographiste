@@ -142,6 +142,16 @@ class Advanced_Import_Admin {
 	private $current_template_url;
 
 	/**
+	 * Total requests
+	 *
+	 * @since    1.3.3
+	 * @access   public
+	 * @var      int    $total_request    Store total request for progress bar.
+	 */
+	private $total_request;
+	private $current_request = 0;
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
@@ -197,21 +207,21 @@ class Advanced_Import_Admin {
 		return (bool) apply_filters( 'advanced_import_is_template_available', $is_available, $item );
 	}
 
-    /**
-     * Check if template is available to import
-     *
-     * @since    1.0.8
-     * @param      array $item    current array of demo list.
-     * @return boolean
-     */
-    public function is_pro( $item ) {
-        $is_pro = false;
-        if ( isset( $item['is_pro'] ) && $item['is_pro'] ) {
-            $is_pro = true;
-        }
+	/**
+	 * Check if template is available to import
+	 *
+	 * @since    1.0.8
+	 * @param      array $item    current array of demo list.
+	 * @return boolean
+	 */
+	public function is_pro( $item ) {
+		$is_pro = false;
+		if ( isset( $item['is_pro'] ) && $item['is_pro'] ) {
+			$is_pro = true;
+		}
 
-        return (bool) apply_filters( 'advanced_import_is_pro', $is_pro, $item );
-    }
+		return (bool) apply_filters( 'advanced_import_is_pro', $is_pro, $item );
+	}
 
 	/**
 	 * Return Template Button
@@ -314,10 +324,12 @@ class Advanced_Import_Admin {
 							'<ol><li class="warning">' . __( 'It is highly recommended to import demo on fresh WordPress installation to exactly replicate the theme demo. If no important data on your site, you can reset it from Reset Wizard at the top', 'advanced-import' ) . '</li>',
 							'<li>' . __( 'No existing posts, pages, categories, images, custom post types or any other data will be deleted or modified.', 'advanced-import' ) . '</li>',
 							'<li>' . __( 'It will install the plugins required for demo and activate them. Also posts, pages, images, widgets, & other data will get imported.', 'advanced-import' ) . '</li>',
+							'<li class="ai-plugin-info">' . __( 'The demo will install following plugin/s:', 'advanced-import' ) . 'ai_replace_plugins' . '</li>' .
 							'<li>' . __( 'Please click on the Import button and wait, it will take some time to import the data.', 'advanced-import' ) . '</li></ol>'
 						),
 						'confirmButtonText' => esc_html__( 'Yes, Import Demo!', 'advanced-import' ),
 						'cancelButtonText'  => esc_html__( 'Cancel', 'advanced-import' ),
+						'no_plugins'        => esc_html__( 'No plugins will be installed.', 'advanced-import' ),
 					),
 					'confirmReset'  => array(
 						'title'             => esc_html__( 'Are you sure?', 'advanced-import' ),
@@ -375,7 +387,7 @@ class Advanced_Import_Admin {
 	public function import_menu() {
 		$this->hook_suffix[] = add_theme_page( esc_html__( 'Demo Import ', 'advanced-import' ), esc_html__( 'Demo Import' ), 'manage_options', 'advanced-import', array( $this, 'demo_import_screen' ) );
 		$this->hook_suffix[] = add_management_page( esc_html__( 'Advanced Import', 'advanced-import' ), esc_html__( 'Advanced Import', 'advanced-import' ), 'manage_options', 'advanced-import-tool', array( $this, 'demo_import_screen' ) );
-
+		$this->hook_suffix = apply_filters( 'advanced_import_menu_hook_suffix', $this->hook_suffix );
 	}
 
 	/**
@@ -574,7 +586,7 @@ class Advanced_Import_Admin {
 			/*finally fetch the file from remote*/
 			$response = wp_remote_get( $demo_file );
 
-			if ( is_array( $response ) && ! empty( $response['body'] ) && $response['response']['code'] == '200' ) {
+			if ( is_array( $response ) && ! is_wp_error( $response ) ) {
 				require_once ABSPATH . 'wp-admin/includes/file.php';
 				WP_Filesystem();
 				global $wp_filesystem;
@@ -781,7 +793,7 @@ class Advanced_Import_Admin {
 					<?php
 						 echo isset( $demo_list['categories'] ) ? esc_attr( implode( ' ', $demo_list['categories'] ) ) : '';
 						 echo isset( $demo_list['type'] ) ? ' ' . esc_attr( $demo_list['type'] ) : '';
-						 echo $this->is_pro($demo_list) ? ' ai-fp-filter-pro' : ' ai-fp-filter-free';
+						 echo $this->is_pro( $demo_list ) ? ' ai-fp-filter-pro' : ' ai-fp-filter-free';
 						 echo $this->is_template_available( $demo_list ) ? '' : ' ai-pro-item'
 					?>
 					"
@@ -798,7 +810,7 @@ class Advanced_Import_Admin {
 							<h4 class="ai-author-info"><?php esc_html_e( 'Author: ', 'advanced-import' ); ?><?php echo esc_html( isset( $demo_list['author'] ) ? $demo_list['author'] : wp_get_theme()->get( 'Author' ) ); ?></h4>
 							<div class="ai-details"><?php esc_html_e( 'Details', 'advanced-import' ); ?></div>
 							<?php
-							if ( $this->is_pro($demo_list)) {
+							if ( $this->is_pro( $demo_list ) ) {
 								?>
 								<span class="ai-premium-label"><?php esc_html_e( 'Premium', 'advanced-import' ); ?></span>
 								<?php
@@ -930,7 +942,7 @@ class Advanced_Import_Admin {
 		</div>
 		<ul class="ai-plugins-wrap hidden">
 			<?php
-			$recommended_plugins = (array) $_POST['recommendedPlugins'];
+			$recommended_plugins = isset( $_POST['recommendedPlugins'] ) ? (array) $_POST['recommendedPlugins'] : array();
 			if ( count( $recommended_plugins ) ) {
 				foreach ( $recommended_plugins as $index => $recommended_plugin ) {
 					?>
@@ -1006,12 +1018,15 @@ class Advanced_Import_Admin {
 	 */
 	private function advanced_import_setup_content_steps() {
 
+		$total_content = 0;
+
 		$content = array();
 
 		/*check if there is files*/
 		$content_data = $this->get_main_content_json();
 		foreach ( $content_data as $post_type => $post_data ) {
 			if ( count( $post_data ) ) {
+				$total_content        += count( $post_data );
 				$first                 = current( $post_data );
 				$post_type_title       = ! empty( $first['type_title'] ) ? $first['type_title'] : ucwords( $post_type ) . 's';
 				$content[ $post_type ] = array(
@@ -1052,6 +1067,8 @@ class Advanced_Import_Admin {
 		/*check if there is files*/
 		$widget_data = $this->get_widgets_json();
 		if ( ! empty( $widget_data ) ) {
+			$total_content += 1;
+
 			$content['widgets'] = array(
 				'title'            => esc_html__( 'Widgets', 'advanced-import' ),
 				'description'      => esc_html__( 'Insert default sidebar widgets as seen in the demo.', 'advanced-import' ),
@@ -1065,6 +1082,7 @@ class Advanced_Import_Admin {
 		}
 		$options_data = $this->get_theme_options_json();
 		if ( ! empty( $options_data ) ) {
+			$total_content      += 1;
 			$content['settings'] = array(
 				'title'            => esc_html__( 'Settings', 'advanced-import' ),
 				'description'      => esc_html__( 'Configure default settings.', 'advanced-import' ),
@@ -1078,6 +1096,7 @@ class Advanced_Import_Admin {
 		}
 		$content = apply_filters( $this->theme_name . '_theme_view_setup_step_content', $content );
 
+		$this->total_request = $total_content;
 		return $content;
 
 	}
@@ -1410,6 +1429,8 @@ class Advanced_Import_Admin {
 	Import single Post/Content
 	*/
 	private function process_import_single_post( $post_type, $post_data, $delayed = 0 ) {
+
+		$this->current_request = $this->current_request + 1;
 
 		$this->log( esc_html__( 'Processing ', 'advanced-import' ) . $post_type . ' ' . $post_data['post_id'] );
 		$original_post_data = $post_data;
@@ -2014,7 +2035,7 @@ class Advanced_Import_Admin {
 
 			/*finally fetch the file from remote*/
 			$response = wp_remote_get( $url );
-			if ( is_array( $response ) && ! empty( $response['body'] ) && $response['response']['code'] == '200' ) {
+			if ( is_array( $response ) && ! is_wp_error( $response ) ) {
 				require_once ABSPATH . 'wp-admin/includes/file.php';
 				$headers = $response['headers'];
 				WP_Filesystem();
@@ -2176,6 +2197,8 @@ class Advanced_Import_Admin {
 	 * return mix
 	 * */
 	private function import_content_widgets_data() {
+		$this->current_request = $this->current_request + 1;
+
 		$import_widget_data      = $this->get_widgets_json();
 		$import_widget_positions = $import_widget_data['widget_positions'];
 		$import_widget_options   = $import_widget_data['widget_options'];
@@ -2200,12 +2223,12 @@ class Advanced_Import_Admin {
 
 			$new_options = apply_filters( 'advanced_import_new_options', $new_options );
 
-			update_option( 'widget_' . $widget_name, $new_options );
+			advanced_import_update_option( 'widget_' . $widget_name, $new_options );
 		}
 
 		$sidebars_widgets = array_merge( $widget_positions, $import_widget_positions );
 		$sidebars_widgets = apply_filters( 'advanced_import_sidebars_widgets', $sidebars_widgets, $this );
-		update_option( 'sidebars_widgets', $sidebars_widgets );
+		advanced_import_update_option( 'sidebars_widgets', $sidebars_widgets );
 
 		return true;
 
@@ -2226,6 +2249,7 @@ class Advanced_Import_Admin {
 	 * return mix
 	 * */
 	public function import_menu_and_options() {
+		$this->current_request = $this->current_request + 1;
 
 		/*final wrap up of delayed posts.*/
 		$this->process_delayed_posts( true );
@@ -2269,7 +2293,7 @@ class Advanced_Import_Admin {
 						$option     = str_replace( $cat_id, $new_cat_id, $option );
 					}
 				}
-				update_option( $option, $value );
+				advanced_import_update_option( $option, $value );
 			}
 		}
 
@@ -2290,7 +2314,7 @@ class Advanced_Import_Admin {
 
 		global $wp_rewrite;
 		$wp_rewrite->set_permalink_structure( '/%year%/%monthnum%/%day%/%postname%/' );
-		update_option( 'rewrite_rules', false );
+		advanced_import_update_option( 'rewrite_rules', false );
 		$wp_rewrite->flush_rules( true );
 
 		return true;

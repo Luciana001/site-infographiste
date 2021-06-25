@@ -4,9 +4,9 @@ Contributors: addonspress, codersantosh, acmeit
 Donate link: https://addonspress.com/
 Tags: import, advanced import, demo import, theme import, widget import, customizer import
 Requires at least: 5.0
-Tested up to: 5.7.1
+Tested up to: 5.7.2
 Requires PHP: 5.6.20
-Stable tag: 1.3.2
+Stable tag: 1.3.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -184,12 +184,15 @@ Here are some important list of filter hooks:
 - advanced_import_welcome_message
 - advanced_import_demo_lists
 - advanced_import_is_pro_active
-- 'advanced_import_post_data'
-- 'advanced_import_replace_post_ids'
-- 'advanced_import_replace_term_ids'
-- 'advanced_import_new_options'
-- 'advanced_import_sidebars_widgets'
-- 'advanced_import_complete_message'
+- advanced_import_post_data
+- advanced_import_replace_post_ids
+- advanced_import_replace_term_ids
+- advanced_import_new_options
+- advanced_import_sidebars_widgets
+- advanced_import_complete_message
+- advanced_import_update_option_['option-name']
+- advanced_import_update_value_['option-name']
+- advanced_import_menu_hook_suffix
 
 Here are some important list of action hooks:
 
@@ -210,10 +213,6 @@ We don't have any starter plugin but we have developed a plugin for [Acme Themes
 
 Yes, many themes are using this plugin, for an example, you can look on [CosmosWP Theme](https://cosmoswp.com/)
 
-= Can I deactivate this plugin? =
-
-Advanced Import is generally one-time use plugin, it is meant to be used for Demo Import or Site Migrate, once you complete your task you can safely deactivate it.
-
 == Screenshots ==
 
 1. Import Main Screen
@@ -224,6 +223,13 @@ Advanced Import is generally one-time use plugin, it is meant to be used for Dem
 6. The frontend of Opus Blog after Import
 
 == Changelog ==
+
+= 1.3.3 - 2021-06-15 =
+* Added : Plugin info user consent
+* Added : 4 new hooks: advanced_import_update_option_['option-name'], advanced_import_update_value_['option-name'] , advanced_import_menu_hook_suffix and advanced_import_current_url
+* Updated : Error handling and Error Message
+* Updated : recommendedPlugins check if isset
+* Fixed : Reset Message
 
 = 1.3.2 - 2021-04-22 =
 * Updated : Latest version test
